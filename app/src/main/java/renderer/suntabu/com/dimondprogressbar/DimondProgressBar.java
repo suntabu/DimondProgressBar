@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
@@ -224,6 +225,7 @@ public class DimondProgressBar extends View {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
 
+
         // 边框
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setColor(Color.GRAY);
@@ -248,6 +250,48 @@ public class DimondProgressBar extends View {
         RectF rect = new RectF(endPos.x - lineWidth, endPos.y - lineWidth, endPos.x + lineWidth, endPos.y + lineWidth);
         canvas.drawRect(rect, mPaint);
 //        canvas.drawCircle(endPos.x, endPos.y, lineWidth + 2, mPaint);
+
+        // "我的等级"
+        RectF targetRect = new RectF(centerPos.x - 50, centerPos.y - 60, centerPos.x + 50, centerPos.y - 20);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setStrokeWidth(3);
+        paint.setTextSize(40);
+        String testString = "我的等级";
+        paint.setColor(Color.WHITE);
+        Paint.FontMetricsInt fontMetrics = paint.getFontMetricsInt();
+        // 转载请注明出处：http://blog.csdn.net/hursing
+        float baseline = (targetRect.bottom + targetRect.top - fontMetrics.bottom - fontMetrics.top) / 2;
+        // 下面这行是实现水平居中，drawText对应改为传入targetRect.centerX()
+        paint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(testString, targetRect.centerX(), baseline, paint);
+
+        // "我的等级"
+        RectF targetRect1 = new RectF(centerPos.x - 50, centerPos.y - 20, centerPos.x + 50, centerPos.y + 20);
+        Paint paint1 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint1.setStrokeWidth(3);
+        paint1.setTextSize(40);
+        String testString1 = "LV";
+        paint1.setColor(Color.WHITE);
+        Paint.FontMetricsInt fontMetrics1 = paint1.getFontMetricsInt();
+        // 转载请注明出处：http://blog.csdn.net/hursing
+        float baseline1 = (targetRect1.bottom + targetRect1.top - fontMetrics1.bottom - fontMetrics1.top) / 2;
+        // 下面这行是实现水平居中，drawText对应改为传入targetRect.centerX()
+        paint1.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(testString1, targetRect1.centerX(), baseline1, paint1);
+
+        // "我的等级"
+        RectF targetRect2 = new RectF(centerPos.x - 50, centerPos.y + 60, centerPos.x + 50, centerPos.y + 80);
+        Paint paint2 = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint2.setStrokeWidth(3);
+        paint2.setTextSize(60);
+        String testString2 = "88";
+        paint2.setColor(Color.YELLOW);
+        Paint.FontMetricsInt fontMetrics2 = paint2.getFontMetricsInt();
+        // 转载请注明出处：http://blog.csdn.net/hursing
+        float baseline2 = (targetRect2.bottom + targetRect2.top - fontMetrics2.bottom - fontMetrics2.top) / 2;
+        // 下面这行是实现水平居中，drawText对应改为传入targetRect.centerX()
+        paint2.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(testString2, targetRect2.centerX(), baseline2, paint2);
 
 
         // effect动画
