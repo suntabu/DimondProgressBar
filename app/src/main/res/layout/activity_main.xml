@@ -8,6 +8,7 @@
 
 
     <renderer.suntabu.com.dimondprogressbar.DimondProgressBar
+        android:id="@+id/progressbar"
         android:layout_width="300dp"
         android:layout_height="300dp"
         android:layout_centerInParent="true" />
@@ -15,4 +16,12 @@
     <renderer.suntabu.com.dimondprogressbar.SpringProgressView
         android:layout_width="300dp"
         android:layout_height="40dp" />
+
+
+    <SeekBar
+        android:id="@+id/bar"
+        android:layout_width="300dp"
+        android:layout_height="20dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

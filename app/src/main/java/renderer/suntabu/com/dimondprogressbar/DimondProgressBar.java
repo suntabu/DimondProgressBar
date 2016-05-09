@@ -3,6 +3,7 @@ package renderer.suntabu.com.dimondprogressbar;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -28,11 +29,14 @@ public class DimondProgressBar extends View {
     private Vector2[] innerBasePos;
     private Vector2 centerPos;
     private boolean isDataInit;
-    private int lineWidth = 20;
+    private int lineWidth = 40;
+    private int borderWidth = 8;
     private Vector2 endPos;
-
     private ArrayList<Vector2> pathArray;
-    private ArrayList<Vector2> colorPosArray;
+    private Vector2[] outBorderPos;
+    private Path borderPath;
+
+    private Path pathBg;
 
     /**
      * 分段颜色
@@ -45,7 +49,7 @@ public class DimondProgressBar extends View {
     /**
      * 进度条当前值
      */
-    private float currentCount = 24f;
+    private float currentCount = 33f;
     /**
      * 画笔
      */
@@ -71,7 +75,6 @@ public class DimondProgressBar extends View {
     private void initView(Context context) {
         isDataInit = false;
         pathArray = new ArrayList<>();
-        colorPosArray = new ArrayList<>();
 
     }
 
@@ -79,6 +82,7 @@ public class DimondProgressBar extends View {
         if (!isDataInit) {
             outerBasePos = new Vector2[4];
             innerBasePos = new Vector2[4];
+            outBorderPos = new Vector2[4];
             centerPos = new Vector2(mWidth / 2, mHeight / 2);
             String[] ptsStr = ptsBaseStr.split(",");
 
@@ -88,9 +92,13 @@ public class DimondProgressBar extends View {
                     x = Float.parseFloat(ptsStr[i]) * mWidth;
                     y = Float.parseFloat(ptsStr[i + 1]) * mHeight;
                     Log.d(TAG, x + "," + y + "    " + Float.parseFloat(ptsStr[i]) + "," + Float.parseFloat(ptsStr[i + 1]) + "    " + mWidth + "," + mHeight + "       " + ptsStr[i] + "," + ptsStr[i + 1]);
-                    outerBasePos[i / 2] = new Vector2();
-                    outerBasePos[i / 2].x = x;
-                    outerBasePos[i / 2].y = y;
+                    outBorderPos[i / 2] = new Vector2();
+                    outBorderPos[i / 2].x = x;
+                    outBorderPos[i / 2].y = y;
+
+
+                    outerBasePos[i / 2] = centerPos.minus(outBorderPos[i / 2]).normalize().scale(lineWidth + borderWidth).plus(outBorderPos[i / 2]);
+
                     innerBasePos[i / 2] = new Vector2();
                     innerBasePos[i / 2] = new Vector2(centerPos.x, centerPos.y).minus(outerBasePos[i / 2]).normalize().scale(lineWidth).plus(outerBasePos[i / 2]);
 
@@ -108,30 +116,68 @@ public class DimondProgressBar extends View {
 
     private void updatePath() {
         pathArray.clear();
-        colorPosArray.clear();
 
         float percent = getPercent();
         float scale = 0;
+        Vector2 newOut = null, newIn = null;
         if (percent < 0.25f) {
             scale = percent / 0.25f;
-            Vector2 newOut = outerBasePos[1].minus(outerBasePos[0]).scale(scale).plus(outerBasePos[0]);
-            Vector2 newIn = innerBasePos[1].minus(innerBasePos[0]).scale(scale).plus(innerBasePos[0]);
+            newOut = outerBasePos[1].minus(outerBasePos[0]).scale(scale).plus(outerBasePos[0]);
+            newIn = innerBasePos[1].minus(innerBasePos[0]).scale(scale).plus(innerBasePos[0]);
 
 
             pathArray.add(innerBasePos[0]);
             pathArray.add(outerBasePos[0]);
             pathArray.add(newOut);
             pathArray.add(newIn);
-            endPos = newOut.plus(newIn).scale(0.5f);
 
         } else if (percent < 0.50f) {
+            scale = (percent - 0.25f) / 0.25f;
+
+            newOut = outerBasePos[2].minus(outerBasePos[1]).scale(scale).plus(outerBasePos[1]);
+            newIn = innerBasePos[2].minus(innerBasePos[1]).scale(scale).plus(innerBasePos[1]);
+
+            pathArray.add(innerBasePos[0]);
+            pathArray.add(outerBasePos[0]);
+            pathArray.add(outerBasePos[1]);
+            pathArray.add(newOut);
+            pathArray.add(newIn);
+            pathArray.add(innerBasePos[1]);
+
 
         } else if (percent < 0.75f) {
+            scale = (percent - 0.50f) / 0.25f;
 
+            newOut = outerBasePos[3].minus(outerBasePos[2]).scale(scale).plus(outerBasePos[2]);
+            newIn = innerBasePos[3].minus(innerBasePos[2]).scale(scale).plus(innerBasePos[2]);
+
+            pathArray.add(innerBasePos[0]);
+            pathArray.add(outerBasePos[0]);
+            pathArray.add(outerBasePos[1]);
+            pathArray.add(outerBasePos[2]);
+            pathArray.add(newOut);
+            pathArray.add(newIn);
+            pathArray.add(innerBasePos[2]);
+            pathArray.add(innerBasePos[1]);
         } else {
+            scale = (percent - 0.75f) / 0.25f;
 
+            newOut = outerBasePos[0].minus(outerBasePos[3]).scale(scale).plus(outerBasePos[3]);
+            newIn = innerBasePos[0].minus(innerBasePos[3]).scale(scale).plus(innerBasePos[3]);
+
+            pathArray.add(innerBasePos[0]);
+            pathArray.add(outerBasePos[0]);
+            pathArray.add(outerBasePos[1]);
+            pathArray.add(outerBasePos[2]);
+            pathArray.add(outerBasePos[3]);
+            pathArray.add(newOut);
+            pathArray.add(newIn);
+            pathArray.add(innerBasePos[3]);
+            pathArray.add(innerBasePos[2]);
+            pathArray.add(innerBasePos[1]);
         }
-
+        endPos = newOut.plus(newIn).scale(0.5f);
+        endPos.y = mHeight - endPos.y;
         path = new Path();
         for (int i = 0; i < pathArray.size(); i++) {
             float x = pathArray.get(i).x;
@@ -144,6 +190,29 @@ public class DimondProgressBar extends View {
             }
         }
         path.close();
+
+
+        pathBg = new Path();
+        pathBg.moveTo(innerBasePos[0].x, innerBasePos[0].y);
+        pathBg.lineTo(outerBasePos[0].x, outerBasePos[0].y);
+        pathBg.lineTo(outerBasePos[1].x, outerBasePos[1].y);
+        pathBg.lineTo(outerBasePos[2].x, outerBasePos[2].y);
+        pathBg.lineTo(outerBasePos[3].x, outerBasePos[3].y);
+        pathBg.lineTo(outerBasePos[0].x, outerBasePos[0].y);
+        pathBg.lineTo(innerBasePos[0].x, innerBasePos[0].y);
+        pathBg.lineTo(innerBasePos[3].x, innerBasePos[3].y);
+        pathBg.lineTo(innerBasePos[2].x, innerBasePos[2].y);
+        pathBg.lineTo(innerBasePos[1].x, innerBasePos[1].y);
+        pathBg.close();
+
+
+        borderPath = new Path();
+        borderPath.moveTo(outBorderPos[0].x, outBorderPos[0].y);
+        borderPath.lineTo(outBorderPos[1].x, outBorderPos[1].y);
+        borderPath.lineTo(outBorderPos[2].x, outBorderPos[2].y);
+        borderPath.lineTo(outBorderPos[3].x, outBorderPos[3].y);
+        borderPath.close();
+
     }
 
     @Override
@@ -151,25 +220,38 @@ public class DimondProgressBar extends View {
         super.onDraw(canvas);
         initData();
         updatePath();
+
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
+
+        // 边框
         mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setColor(Color.GREEN);
+        mPaint.setColor(Color.GRAY);
+        mPaint.setStrokeWidth(borderWidth);
+        canvas.drawPath(borderPath, mPaint);
 
+        //  进度条底
+        mPaint.setStyle(Paint.Style.FILL);
+        mPaint.setColor(Color.GRAY);
+        canvas.drawPath(pathBg, mPaint);
 
-        Shader gradient = new SweepGradient(centerPos.x, centerPos.y, Color.RED, Color.GREEN);
-
+        // 进度条
+        Shader gradient = new SweepGradient(centerPos.x, centerPos.y, Color.GREEN, Color.RED);
+        float rotate = -90f;
+        Matrix gradientMatrix = new Matrix();
+        gradientMatrix.preRotate(rotate, 0, 0);
+        gradient.setLocalMatrix(gradientMatrix);
         mPaint.setShader(gradient);
         canvas.drawPath(path, mPaint);
 
-        RectF rect = new RectF(endPos.x - lineWidth, endPos.y - lineWidth * 2, endPos.x + lineWidth, endPos.y);
+        // rect
+        RectF rect = new RectF(endPos.x - lineWidth, endPos.y - lineWidth, endPos.x + lineWidth, endPos.y + lineWidth);
         canvas.drawRect(rect, mPaint);
-//        canvas.drawCircle(centerPos.x, centerPos.y, mWidth / 2, mPaint);
-        //canvas.drawRoundRect(rectProgressBg, round, round, mPaint);
-//        mPaint.setColor(Color.GREEN);
-        mPaint.setStrokeWidth(40);
-        Path newPath = createPath(mWidth, mHeight, ptsBaseStr);
-        canvas.drawPath(newPath, mPaint);
+//        canvas.drawCircle(endPos.x, endPos.y, lineWidth + 2, mPaint);
+
+
+        // effect动画
+
     }
 
     private int dipToPx(int dip) {
