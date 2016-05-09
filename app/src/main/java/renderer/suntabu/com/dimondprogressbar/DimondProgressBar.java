@@ -247,7 +247,7 @@ public class DimondProgressBar extends View {
         canvas.drawPath(path, mPaint);
 
         // rect
-        RectF rect = new RectF(endPos.x - lineWidth, endPos.y - lineWidth, endPos.x + lineWidth, endPos.y + lineWidth);
+        RectF rect = new RectF(endPos.x - lineWidth + borderWidth, endPos.y - lineWidth + borderWidth, endPos.x + lineWidth - borderWidth, endPos.y + lineWidth - borderWidth);
         canvas.drawRect(rect, mPaint);
 //        canvas.drawCircle(endPos.x, endPos.y, lineWidth + 2, mPaint);
 
